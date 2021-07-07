@@ -24,8 +24,14 @@ const PopUp = () => {
     )
     getWaitForPlay().then(
       (res) => {
-        console.log("wait time "+ res)
-        setTimeWait(transformSecondsToHuman(res))
+        if(res){
+          console.log("wait time "+ res)
+          setTimeWait(transformSecondsToHuman(res))
+        }
+        else{
+          setTimeWait('not found')
+        }
+        
       }
     )
     getPassport().then(

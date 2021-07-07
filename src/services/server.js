@@ -1,10 +1,12 @@
 import * as Parameters from "./parameters.js";
+
 import {
     CONST_ABI
 } from "./abiApp.js";
 import {
     CONST_ABI_TOKEN
 } from "./abiTG.js";
+
 
 const Web3 = require("web3");
 let web3 = new Web3(Web3.givenProvider || new Web3.providers.HttpProvider(
@@ -24,20 +26,32 @@ export async function play() {
         const _cost = await miContrato.methods.cost().call((err, result) => result);
         let _account = await getUserLogued();
         let confirm = false;
-        const player = await miContrato.methods.game(_cost).send({
-            from: _account,
-            value: _cost,
-        },
-            function (error, transactionHash) {
-                console.log(error);
-                if (transactionHash !== undefined) {
-                    confirm = true;
-                }else{
-                    return false
-                }
-
+        const player = await miContrato.methods.game(_cost)
+        .estimateGas({from: _account,value: _cost,},
+            function(error, gasAmount) {
+            console.log('gasAmount',gasAmount);
+            if((parseInt(gasAmount) > 1000000 ) || (error)){
+                alert('Insufficient funds or Error in Smart Contract, Try again in few minutes');
+            }else{
+                miContrato.methods.game(_cost)
+                .send({
+                    from: _account,
+                    value: _cost,
+                },
+                    function (error, transactionHash) {
+                        console.log(error);
+                        if (transactionHash !== undefined) {
+                            confirm = true;
+                        }else{
+                            return false
+                        }
+        
+                    }
+                );
             }
-        );
+           
+        })
+        
         return confirm;
     } catch (Ex) {
         console.log(Ex);
@@ -441,7 +455,7 @@ export async function getWaitForPlay() {
             .call((err, result) => result);
     } catch (Ex) {
         console.log(Ex);
-        return 2*24*60*60;
+        return false;
     }
 }
 
